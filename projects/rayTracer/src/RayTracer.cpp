@@ -119,7 +119,7 @@ void drawScene() {
 
 
 					Ray ray(camera->from, direction);
-					color += rayTracing(scene, ray, MAX_DEPTH);
+					color += rayTracing(accelerationStructure, ray, MAX_DEPTH);
 				}
 			}
 

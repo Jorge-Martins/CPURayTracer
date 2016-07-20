@@ -136,27 +136,16 @@ public:
 	glm::vec3 color();
 };
 
-class BoundingBox {
-protected:
+struct BVHNode {
 	glm::vec3 min, max;
+	Shape *shape;
+	BVHNode *parent;
+	BVHNode *leftChild;
+	BVHNode *rightChild;
 
-public:
-	BoundingBox();
-	BoundingBox(glm::vec3 p1, glm::vec3 p2);
-	BoundingBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
+	BVHNode();
 	bool intersection(Ray ray);
 	bool intersection(Ray ray, float &distance);
-};
-
-class BVHBoundingBox : public BoundingBox {
-	Shape *shape;
-
-
-public:
-	BVHBoundingBox(glm::vec3 p1, glm::vec3 p2);
-	BVHBoundingBox(Shape *shape);
-	BVHBoundingBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
-	Shape* getShape();
 };
 
 #endif 

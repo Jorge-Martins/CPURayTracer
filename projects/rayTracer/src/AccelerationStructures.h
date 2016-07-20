@@ -16,16 +16,7 @@ public:
 	AccelerationStructure(Scene *scene);
 	virtual void build() = 0;
 	virtual bool findNearestIntersection(Ray ray, RayIntersection *out) = 0;
-};
-
-struct BVHNode {
-	glm::vec3 min, max;
-	Shape *shape;
-	BVHNode *parent;
-	BVHNode *leftChild;
-	BVHNode *rightChild;
-
-	BVHNode();
+	Scene* getScene();
 };
 
 class LBVH : public AccelerationStructure {

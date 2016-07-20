@@ -1,12 +1,12 @@
 #include "RayTracing.h"
 
 
-glm::vec3 rayTracing(Scene *scene, Ray ray, int depth) {
-
+glm::vec3 rayTracing(AccelerationStructure *sceneAS, Ray ray, int depth) {
+	Scene *scene = sceneAS->getScene();
 	RayIntersection intersect;
 	glm::vec3 c = scene->getBackColor();
 
-	bool foundIntersect = nearestIntersect(scene, ray, &intersect);
+	bool foundIntersect = nearestIntersection(sceneAS, ray, &intersect);
 
 	if(!foundIntersect)
 		return c;
@@ -40,7 +40,7 @@ glm::vec3 rayTracing(Scene *scene, Ray ray, int depth) {
 	glm::vec3 reflectionCol(0.0f);
 	if(mat.specular() > 0.0f && depth > 0) {
 		Ray reflectedRay = Ray(intersect.point, glm::reflect(ray.direction, intersect.normal));
-		reflectionCol = rayTracing(scene, reflectedRay, depth - 1) * mat.color() * mat.specular();
+		reflectionCol = rayTracing(sceneAS, reflectedRay, depth - 1) * mat.color() * mat.specular();
 	}
 
 	// transmission
@@ -58,19 +58,19 @@ glm::vec3 rayTracing(Scene *scene, Ray ray, int depth) {
 		glm::vec3 refractionDir = computeTransmissionDir(ray.direction, intersect.normal, ior1, ior2);
 		if(!equal(glm::length(refractionDir), 0.0f)) {
 			Ray refractedRay(intersect.point, refractionDir);
-			refractionCol = rayTracing(scene, refractedRay, depth - 1) * mat.color() * mat.transparency();
+			refractionCol = rayTracing(sceneAS, refractedRay, depth - 1) * mat.color() * mat.transparency();
 		}
 	}
 
 	return local + reflectionCol + refractionCol;
 }
 
-bool nearestIntersect(Scene *scene, Ray ray, RayIntersection *out) {
+bool nearestIntersection(AccelerationStructure *sceneAS, Ray ray, RayIntersection *out) {
 	RayIntersection minIntersect(std::numeric_limits<float>::infinity(), glm::vec3(0.0f), glm::vec3(0.0f));
 	bool intersectionFound = false;
 
 	RayIntersection curr = minIntersect;
-	for(Shape *s : scene->getShapes()) {
+	for(Shape *s : sceneAS->getScene()->getPlanes()) {
 		if(s->intersection(ray, &curr)) {
 			if(curr.distance < minIntersect.distance) {
 				intersectionFound = true;
@@ -78,6 +78,8 @@ bool nearestIntersect(Scene *scene, Ray ray, RayIntersection *out) {
 			}
 		}
 	}
+
+	intersectionFound |= sceneAS->findNearestIntersection(ray, &minIntersect);
 
 	if(intersectionFound) {
 		*out = minIntersect;

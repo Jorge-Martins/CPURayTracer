@@ -487,38 +487,6 @@ glm::vec3 Light::color() {
 	return _color;
 }
 
-BoundingBox::BoundingBox() {
-	min = glm::vec3(FLT_MAX);
-	max = glm::vec3(-FLT_MAX);
-}
-
-BoundingBox::BoundingBox(glm::vec3 p1, glm::vec3 p2) {
-	min = glm::min(p1, p2);
-	max = glm::max(p1, p2);
-}
-
-BoundingBox::BoundingBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-	min = glm::vec3(minX, minY, minZ);
-	max = glm::vec3(maxX, maxY, maxZ);
-}
-
-BVHBoundingBox::BVHBoundingBox(glm::vec3 min, glm::vec3 max) : BoundingBox(min, max), shape(nullptr) {}
-
-BVHBoundingBox::BVHBoundingBox(Shape *shape) {
-	Extent e = shape->getAAExtent();
-
-	min = e.min;
-	max = e.max;
-	this->shape = shape;
-}
-
-BVHBoundingBox::BVHBoundingBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) :
-	BoundingBox(minX, minY, minZ, maxX, maxY, maxZ), shape(nullptr) {
-}
-
-Shape* BVHBoundingBox::getShape() {
-	return shape;
-}
 
 
 bool nnn(Ray ray, glm::vec3 min, glm::vec3 max) {
@@ -747,7 +715,7 @@ bool oop(Ray ray, glm::vec3 min, glm::vec3 max) {
 }
 
 /* AABB intersection with ray slopes */
-bool BoundingBox::intersection(Ray ray) {
+bool BVHNode::intersection(Ray ray) {
 	switch(ray.classification) {
 	case NNN:
 		return nnn(ray, min, max);
@@ -833,7 +801,7 @@ bool BoundingBox::intersection(Ray ray) {
 }
 
 
-bool BoundingBox::intersection(Ray ray, float &distance) {
+bool BVHNode::intersection(Ray ray, float &distance) {
 	float t1, t2;
 	switch(ray.classification) {
 	case NNN:
