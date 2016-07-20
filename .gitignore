@@ -1,0 +1,27 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Stuff
+*.exe
+*.ilk
+*.pdb
+*.sdf
+*.opensdf
+*.suo
+*.db
+
+# Folders
+projects/*/obj/*
+projects/bin/*
+*.opendb

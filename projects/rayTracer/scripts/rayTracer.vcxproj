@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8F58C910-0D66-47C7-966F-982E9C632805}</ProjectGuid>
+    <RootNamespace>rayTracer</RootNamespace>
+    <ProjectName>rayTracer</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\..\bin\</OutDir>
+    <IntDir>..\obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\..\bin\</OutDir>
+    <IntDir>..\obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\dependencies\freeglut\include\;$(SolutionDir)\..\dependencies\glew\include\;$(SolutionDir)\..\dependencies\glm\glm\;$(SolutionDir)\..\dependencies\FreeImage\Dist\;$(SolutionDir)\..\dependencies\FreeImage\Wrapper\FreeImagePlus\dist;$(SolutionDir)\..\dependencies\software\win_flex_bison-latest\</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;FreeImage.lib;FreeImagePlus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\dependencies\freeglut\lib\;$(SolutionDir)\..\dependencies\glew\lib\Release\Win32\;$(SolutionDir)\..\dependencies\FreeImage\Dist\;$(SolutionDir)\..\dependencies\FreeImage\Wrapper\FreeImagePlus\dist;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\dependencies\freeglut\include\;$(SolutionDir)\..\dependencies\glew\include\;$(SolutionDir)\..\dependencies\glm\glm\;$(SolutionDir)\..\dependencies\FreeImage\Dist\;$(SolutionDir)\..\dependencies\FreeImage\Wrapper\FreeImagePlus\dist;$(SolutionDir)\..\dependencies\software\win_flex_bison-latest\</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalDependencies>glew32.lib;freeglut.lib;FreeImage.lib;FreeImagePlus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\dependencies\freeglut\lib\;$(SolutionDir)\..\dependencies\glew\lib\Release\Win32\;$(SolutionDir)\..\dependencies\FreeImage\Dist\;$(SolutionDir)\..\dependencies\FreeImage\Wrapper\FreeImagePlus\dist;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\AccelerationStructures.cpp" />
+    <ClCompile Include="..\src\RayTracer.cpp" />
+    <ClCompile Include="..\src\parsing\mc_driver.cpp" />
+    <ClCompile Include="..\src\parsing\mc_lexer.yy.cc" />
+    <ClCompile Include="..\src\parsing\mc_parser.tab.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\AccelerationStructures.h" />
+    <ClInclude Include="..\src\MathUtil.h" />
+    <ClInclude Include="..\src\parsing\driver_structs.h" />
+    <ClInclude Include="..\src\parsing\location.hh" />
+    <ClInclude Include="..\src\parsing\mc_driver.hpp" />
+    <ClInclude Include="..\src\parsing\mc_parser.tab.hh" />
+    <ClInclude Include="..\src\parsing\mc_scanner.hpp" />
+    <ClInclude Include="..\src\parsing\position.hh" />
+    <ClInclude Include="..\src\parsing\stack.hh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\src\parsing\mc_lexer.l">
+      <FileType>Document</FileType>
+      <Command>$(SolutionDir)\..\dependencies\software\win_flex_bison-latest\win_flex --outfile=%(RootDir)%(Directory)\%(Filename).yy.cc %(FullPath)</Command>
+      <Message>Lexer compilation</Message>
+      <Outputs>%(RootDir)%(Directory)%(Filename).yy.cc;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\src\parsing\mc_parser.yy">
+      <FileType>Document</FileType>
+      <Command>$(SolutionDir)\..\dependencies\software\win_flex_bison-latest\win_bison -d -v -o %(RootDir)%(Directory)\%(Filename).tab.cc %(FullPath) </Command>
+      <Message>Bison parser compilation</Message>
+      <Outputs>%(RootDir)%(Directory)%(FileName).tab.cc;%(RootDir)%(Directory)%(FileName).tab.hh;%(RootDir)%(Directory)%(FileName).output;%(RootDir)%(Directory)location.hh;%(RootDir)%(Directory)position.hh;%(RootDir)%(Directory)stack.hh;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\resources\nffFiles\balls_high.nff" />
+    <None Include="..\..\resources\nffFiles\balls_low.nff" />
+    <None Include="..\..\resources\nffFiles\balls_medium.nff" />
+    <None Include="..\..\resources\nffFiles\mount_high.nff" />
+    <None Include="..\..\resources\nffFiles\mount_low.nff" />
+    <None Include="..\..\resources\nffFiles\mount_very_high.nff" />
+    <None Include="..\src\parsing\mc_parser.output" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\Primitives.h" />
+    <ClInclude Include="..\src\RayTracing.h" />
+    <ClInclude Include="..\src\Scene.h" />
+    <ClCompile Include="..\src\Primitives.cpp" />
+    <ClCompile Include="..\src\RayTracing.cpp" />
+    <ClCompile Include="..\src\Scene.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

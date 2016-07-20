@@ -1,0 +1,11 @@
+
+# Flex generated files
+mc_lexer.yy.cc
+
+# Bison yacc generated files
+mc_parser.output
+mc_parser.tab.cc
+mc_parser.tab.hh
+location.hh
+position.hh
+stack.hh
