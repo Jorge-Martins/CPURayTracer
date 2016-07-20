@@ -13,7 +13,6 @@
 *.a
 
 # Stuff
-*.exe
 *.ilk
 *.pdb
 *.sdf
