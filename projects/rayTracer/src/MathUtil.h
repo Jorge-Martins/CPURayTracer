@@ -2,7 +2,7 @@
 #define _MATH_UTIL_
 
 #define MAX_DEPTH 3
-#define SUPER_SAMPLING 1
+#define SUPER_SAMPLING 3
 #define SUPER_SAMPLING_F (1.0f / SUPER_SAMPLING)
 #define SUPER_SAMPLING_2 (SUPER_SAMPLING * SUPER_SAMPLING)
 #define SUPER_SAMPLING_2F (1.0f / SUPER_SAMPLING_2)
@@ -149,10 +149,10 @@ inline int longestCommonPrefix(int i, int j, int nObjects, unsigned int *mortonC
 				mcj += j;
 			}
 
-			return __lzcnt(mci ^ mcj);
+			return (unsigned int) __lzcnt64(mci ^ mcj);
 		}
 
-		return __lzcnt(mci ^ mcj);
+		return __lzcnt((unsigned int) (mci ^ mcj));
 
 	}
 	else {

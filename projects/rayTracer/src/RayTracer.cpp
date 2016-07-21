@@ -259,11 +259,11 @@ int main(int argc, char *argv[]) {
 
 	//file = "balls_low.nff";
 	//file = "balls_medium.nff";
-	file = "balls_high.nff";
+	//file = "balls_high.nff";
 	//file = "mount_low.nff";
 	//file = "mount_high.nff";
 	//file = "mount_very_high.nff";
-	//file = "cyl.nff";
+	file = "cyl.nff";
 
 	if(!scene->loadNff(path + file, &initRadius, &initVerticalAngle, &initHorizontalAngle, &initFov)) {
 		std::cout << "Could not find scene files." << std::endl;

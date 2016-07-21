@@ -160,7 +160,7 @@ void MC::MC_Driver::add_poly_patch(int nVerts, std::vector<vec3>*pointsAndNormal
 		std::vector<glm::vec3> verts(pointsAndNormals->size() / 2);
 		std::vector<glm::vec3> norms(pointsAndNormals->size() / 2);
 
-		for(int vert = 0, size = pointsAndNormals->size() / 2; vert < size; ++vert) {
+		for(int vert = 0, size = (int) pointsAndNormals->size() / 2; vert < size; ++vert) {
 			vec3 &p = (*pointsAndNormals)[vert * 2], &n = (*pointsAndNormals)[vert * 2 + 1];
 			glm::vec3 pos(p.x, p.y, p.z), normal(n.x, n.y, n.z);
 			verts.push_back(pos);
