@@ -16,6 +16,7 @@ public:
 	AccelerationStructure(Scene *scene);
 	virtual void build() = 0;
 	virtual bool findNearestIntersection(Ray ray, RayIntersection *out) = 0;
+	virtual bool estimateShadowTransmittance(Ray ray, glm::vec3 &color, float &transmittance) = 0;
 	Scene* getScene();
 };
 
@@ -25,8 +26,10 @@ class LBVH : public AccelerationStructure {
 
 public:
 	LBVH(Scene *scene);
+	~LBVH();
 	void build();
 	bool findNearestIntersection(Ray ray, RayIntersection *out);
+	bool estimateShadowTransmittance(Ray ray, glm::vec3 &color, float &transmittance);
 };
 
 

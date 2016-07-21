@@ -13,6 +13,7 @@ int RES_Y = 512;
 Scene *scene(new Scene);
 glm::vec3 *colors = new glm::vec3[RES_X * RES_Y];
 Camera *camera;
+AccelerationStructure *accelerationStructure = nullptr;
 
 bool renderFrame = true;
 bool videoMode = false;
@@ -27,7 +28,6 @@ float initFov;
 int xDragStart, yDragStart, dragging, zooming;
 float fov;
 
-AccelerationStructure *accelerationStructure;
 
 glm::vec3 computeFromCoordinates(glm::vec3 up) {
 	float ha, va;
@@ -49,6 +49,10 @@ glm::vec3 computeFromCoordinates(glm::vec3 up) {
 void cleanup() {
 	delete scene;
 	delete[] colors;
+
+	if(accelerationStructure != nullptr) {
+		delete accelerationStructure;
+	}
 
 	std::cout << "Cleanup done!" << std::endl;
 }
@@ -255,8 +259,8 @@ int main(int argc, char *argv[]) {
 
 	//file = "balls_low.nff";
 	//file = "balls_medium.nff";
-	//file = "balls_high.nff";
-	file = "mount_low.nff";
+	file = "balls_high.nff";
+	//file = "mount_low.nff";
 	//file = "mount_high.nff";
 	//file = "mount_very_high.nff";
 	//file = "cyl.nff";

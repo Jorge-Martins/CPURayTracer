@@ -24,3 +24,4 @@
 projects/*/obj/*
 projects/bin/*
 *.opendb
+bin/

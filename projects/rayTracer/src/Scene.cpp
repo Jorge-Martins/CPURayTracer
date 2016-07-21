@@ -96,7 +96,7 @@ void Scene::addSphere(glm::vec3 center, float radius) {
 
 void Scene::addPoly(int numVerts, std::vector<glm::vec3> verts) {
 
-	if(numVerts = 3) {
+	if(numVerts == 3) {
 		Triangle *tri = new Triangle(verts);
 		tri->setMaterial(_material);
 		_shapes.push_back(tri);

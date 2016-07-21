@@ -19,20 +19,16 @@ glm::vec3 rayTracing(AccelerationStructure *sceneAS, Ray ray, int depth) {
 		glm::vec3 feelerDir = glm::normalize(l->position() - intersect.point);
 		Ray feeler(intersect.point, feelerDir);
 
-		bool inShadow = false;
-		for(Shape *s : scene->getShapes()) {
-			if(s->intersection(feeler, nullptr)) {
-				inShadow = true;
-				break;
-			}
-		}
-		if(!inShadow) {
-			float diff = std::fmax(glm::dot(feelerDir, intersect.normal), 0.0f);
-			glm::vec3 reflectDir = glm::reflect(-feelerDir, intersect.normal);
-			float spec = std::pow(std::fmax(glm::dot(reflectDir, -ray.direction), 0.0f), mat.shininess());
+		glm::vec3 transmittance = estimateShadowTransmittance(sceneAS, feeler, l->color());
 
-			glm::vec3 seenColor = mat.color() * l->color();
-			local += seenColor * (diff * mat.diffuse() + spec * mat.specular());
+		bool result = glm::length(transmittance) > 0.01f;
+
+		if(result) {
+			float Ldiff = std::fmax(glm::dot(feelerDir, intersect.normal), 0.0f);
+			glm::vec3 reflectDir = glm::reflect(-feelerDir, intersect.normal);
+			float Lspec = std::pow(std::fmax(glm::dot(reflectDir, -ray.direction), 0.0f), mat.shininess());
+
+			local += (Ldiff * mat.color() * mat.diffuse() + Lspec * mat.specular()) * transmittance;
 		}
 	}
 
@@ -67,24 +63,45 @@ glm::vec3 rayTracing(AccelerationStructure *sceneAS, Ray ray, int depth) {
 
 bool nearestIntersection(AccelerationStructure *sceneAS, Ray ray, RayIntersection *out) {
 	RayIntersection minIntersect(std::numeric_limits<float>::infinity(), glm::vec3(0.0f), glm::vec3(0.0f));
-	bool intersectionFound = false;
+	bool intersectionFound = false, minIntersection = false;
+
+	minIntersection = sceneAS->findNearestIntersection(ray, &minIntersect);
 
 	RayIntersection curr = minIntersect;
+
 	for(Shape *s : sceneAS->getScene()->getPlanes()) {
-		if(s->intersection(ray, &curr)) {
-			if(curr.distance < minIntersect.distance) {
-				intersectionFound = true;
-				minIntersect = curr;
-			}
+		intersectionFound = s->intersection(ray, &curr);
+
+		if(intersectionFound && curr.distance < minIntersect.distance) {
+			minIntersect = curr;
+			minIntersection = true;
 		}
 	}
 
-	intersectionFound |= sceneAS->findNearestIntersection(ray, &minIntersect);
-
-	if(intersectionFound) {
+	if(minIntersection) {
 		*out = minIntersect;
 	}
-	return intersectionFound;
+
+	return minIntersection;
+}
+
+glm::vec3 estimateShadowTransmittance(AccelerationStructure *sceneAS, Ray feeler, glm::vec3 &color) {
+	float transmittance = 1.0f;
+	sceneAS->estimateShadowTransmittance(feeler, color, transmittance);
+
+	bool result = false;
+	for(Shape *s : sceneAS->getScene()->getPlanes()) {
+		RayIntersection curr = RayIntersection();
+		result = s->intersection(feeler, &curr);
+
+		if(result) {
+			transmittance *= curr.shape->material().transparency();
+			color *= curr.shape->material().color();
+		}
+	}
+
+	return color * transmittance;
+
 }
 
 glm::vec3 computeTransmissionDir(glm::vec3 inDir, glm::vec3 normal, float beforeIOR, float afterIOR) {

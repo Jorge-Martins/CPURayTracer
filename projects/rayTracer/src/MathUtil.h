@@ -15,6 +15,8 @@
 #define StackSize 64
 #define sizeMul 6
 
+#define TRANSMITTANCE_LIMIT 0.05f
+
 #include <intrin.h>
 
 inline float haltonSequance(int index, int base) {

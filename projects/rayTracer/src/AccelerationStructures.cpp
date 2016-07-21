@@ -11,8 +11,14 @@ Scene* AccelerationStructure::getScene() {
 
 LBVH::LBVH(Scene *scene) : AccelerationStructure::AccelerationStructure(scene), nodes(nullptr), bvhSize(0) {}
 
+LBVH::~LBVH() {
+	if(nodes != nullptr) {
+		delete[] nodes;
+	}
+}
+
 void LBVH::build() {
-	clock_t start = clock();
+	long time1 = glutGet(GLUT_ELAPSED_TIME);
 	std::vector<Shape *> shapes = scene->getShapes();
 	unsigned int nObjects = shapes.size();
 	unsigned int size = 2 * nObjects - 1;
@@ -35,19 +41,17 @@ void LBVH::build() {
 	}
  
 	BVHNode *temp = new BVHNode[nObjects];
-	
-	int index = 0;
-	Extent *e;
-	for(Shape *s : shapes) {
-		e = &s->getAAExtent();
 
-		temp[index].min = e->min;
-		temp[index].max = e->max;
-		temp[index++].shape = s;
+	for(unsigned int i = 0; i < shapes.size(); i++) {
+		Extent e = shapes[i]->getAAExtent();
+
+		temp[i].min = e.min;
+		temp[i].max = e.max;
+		temp[i].shape = shapes[i];
 	}
 
 	unsigned int code;
-	std::map <unsigned int, unsigned int> mcodes;
+	std::multimap <unsigned int, unsigned int> mcodes;
 	//sort morton codes
 	
 	for(unsigned int i = 0; i < nObjects; i++) {
@@ -55,22 +59,24 @@ void LBVH::build() {
 		mcodes.insert(std::pair<unsigned int, unsigned int>(code, i));
 	}
 
-	index = 0;
+	int aux = 0;
 	unsigned int value;
 	for(auto entry : mcodes) {
-		mortonCodes[index] = entry.first;
+		mortonCodes[aux] = entry.first;
 		value = entry.second;
 
-		nodes[leafOffset + index++] = temp[value];
+		nodes[leafOffset + aux] = temp[value];
+		aux++;
 	}
 
 	delete[] temp;
 	mcodes.clear();
 
-
 	BVHNode *bvhLeaves = &nodes[nObjects - 1];
 
-	for(int i = 0; i < nObjects; i++) {
+	//build BVH
+	#pragma omp parallel for 
+	for(int i = 0; i < nObjects - 1; i++) {
 		// Determine direction of the range (+1 or -1)
 		int sign = longestCommonPrefix(i, i + 1, nObjects, mortonCodes) - 
 			longestCommonPrefix(i, i - 1, nObjects, mortonCodes);
@@ -131,56 +137,46 @@ void LBVH::build() {
 		current->leftChild->parent = current;
 		current->rightChild->parent = current;
 	}
-
-	delete[] mortonCodes;
-
-	//int *lock = new int[nObjects];
-	//memset(lock, 0, nObjects * sizeof(int));
-	std::vector<BVHNode> debug;
-	//for(int i = 0; i < nObjects - 1; i++) {
-	//	BVHNode *node = &bvhLeaves[i];
-	//	node = node->parent;
-	//	int index = node - nodes;
-
-	//	int oldLock = lock[index];
-	//	lock[index] += 1;
-
-	//	while(1) {
-	//		if(oldLock == 0) {
-	//			break;
-	//		}
-
-	//		glm::vec3 lmin, lmax, rmin, rmax;
-	//		lmin = node->leftChild->min;
-	//		lmax = node->leftChild->max;
-
-	//		rmin = node->rightChild->min;
-	//		rmax = node->rightChild->max;
-
-	//		node->min = glm::min(lmin, rmin);
-	//		node->max = glm::max(lmax, rmax);
-
-	//		//if root
-	//		if(node->parent == nullptr) {
-	//			break;
-	//		}
-
-	//		node = node->parent;
-	//		index = node - nodes;
-
-	//		oldLock = lock[index];
-	//		lock[index] += 1;
-	//	}
-	//}
-
-	//delete[] lock;
 	
-	for(int i = 0; i < bvhSize; i++) {
-		debug.push_back(nodes[i]);
+	delete[] mortonCodes;
+	
+	int *lock = new int[nObjects];
+	memset(lock, 0, nObjects * sizeof(int));
+	
+	//Update BB limits
+	for(int i = 0; i < nObjects; i++) {
+		BVHNode *node = &bvhLeaves[i];
+
+		node = node->parent;
+		int index = node - nodes;
+		int oldLock = lock[index];
+		lock[index] += 1;
+
+		while(1) {
+			if(oldLock == 0) {
+				break;
+			}
+
+			node->min = glm::min(node->leftChild->min, node->rightChild->min);
+			node->max = glm::max(node->leftChild->max, node->rightChild->max);
+
+			//if root
+			if(node->parent == nullptr) {
+				break;
+			}
+
+			node = node->parent;
+
+			index = node - nodes;
+			oldLock = lock[index];
+			lock[index] += 1;
+		}
 	}
 
-	clock_t end = clock();
-	std::cout << "BVH building time: " << (float)(end - start) / CLOCKS_PER_SEC << "s" << std::endl << std::endl;
+	delete[] lock;
+
+	long time2 = glutGet(GLUT_ELAPSED_TIME);
+	std::cout << "BVH building time: " << (float)(time2 - time1) / 1000.0f << "s" << std::endl << std::endl;
 }
 
 bool LBVH::findNearestIntersection(Ray ray, RayIntersection *minIntersect) {
@@ -241,6 +237,105 @@ bool LBVH::findNearestIntersection(Ray ray, RayIntersection *minIntersect) {
 					if(intersectionFound && (curr.distance < minIntersect->distance)) {
 						result = true;
 						*minIntersect = curr;
+					}
+
+				}
+				else {
+					traverseR = true;
+				}
+			}
+		}
+
+
+		if(!traverseL && !traverseR) {
+			node = stackNodes[--stackIndex]; // pop
+
+		}
+		else {
+			node = (traverseL) ? childL : childR;
+			if(traverseL && traverseR) {
+				stackNodes[stackIndex++] = childR; // push
+			}
+		}
+	}
+
+	return result;
+}
+
+bool LBVH::estimateShadowTransmittance(Ray ray, glm::vec3 &color, float &transmittance) {
+	bool intersectionFound = false;
+	RayIntersection curr = RayIntersection();
+
+	BVHNode *stackNodes[StackSize];
+
+	unsigned int stackIndex = 0;
+
+	stackNodes[stackIndex++] = nullptr;
+
+	BVHNode *childL, *childR, *node = &nodes[0];
+
+	intersectionFound = node->intersection(ray);
+
+	if(!intersectionFound) {
+		return false;
+	}
+
+
+	bool result = false;
+	bool lIntersection, rIntersection, traverseL, traverseR;
+
+	while(node != nullptr) {
+		lIntersection = rIntersection = traverseL = traverseR = false;
+
+		childL = node->leftChild;
+		if(childL != nullptr) {
+			lIntersection = childL->intersection(ray);
+
+			if(lIntersection) {
+				// Leaf node
+				if(childL->shape != nullptr) {
+					if(transmittance > TRANSMITTANCE_LIMIT) {
+						intersectionFound = childL->shape->intersection(ray, &curr);
+
+						if(intersectionFound) {
+							transmittance *= curr.shape->material().transparency();
+							color *= curr.shape->material().color();
+							result = true;
+
+						}
+
+					}
+					else {
+						return result;
+					}
+
+				}
+				else {
+					traverseL = true;
+				}
+			}
+		}
+
+		childR = node->rightChild;
+		if(childR != nullptr) {
+			rIntersection = childR->intersection(ray);
+
+			if(rIntersection) {
+				// Leaf node
+				if(childR->shape != nullptr) {
+					if(transmittance > TRANSMITTANCE_LIMIT) {
+						intersectionFound = childR->shape->intersection(ray, &curr);
+
+						if(intersectionFound) {
+							transmittance *= curr.shape->material().transparency();
+							color *= curr.shape->material().color();
+							result = true;
+
+						}
+
+					}
+					else {
+						return result;
 					}
 
 				}
