@@ -16,20 +16,13 @@ glm::vec3 rayTracing(AccelerationStructure *sceneAS, Ray ray, int depth) {
 	// local illumination
 	glm::vec3 local(0.0f);
 	for(Light *l : scene->getLights()) {
-		glm::vec3 feelerDir = glm::normalize(l->position() - intersect.point);
-		Ray feeler(intersect.point, feelerDir);
-
-		glm::vec3 transmittance = estimateShadowTransmittance(sceneAS, feeler, l->color());
-
-		bool result = glm::length(transmittance) > 0.01f;
-
-		if(result) {
-			float Ldiff = std::fmax(glm::dot(feelerDir, intersect.normal), 0.0f);
-			glm::vec3 reflectDir = glm::reflect(-feelerDir, intersect.normal);
-			float Lspec = std::pow(std::fmax(glm::dot(reflectDir, -ray.direction), 0.0f), mat.shininess());
-
-			local += (Ldiff * mat.color() * mat.diffuse() + Lspec * mat.specular()) * transmittance;
-		}
+		#ifndef SOFT_SHADOWS
+		local += computeShadows(sceneAS, ray, intersect, 
+			glm::normalize(l->position() - intersect.point), l);
+		#else
+		local += computeSoftShadows(sceneAS, ray, intersect,
+			glm::normalize(l->position() - intersect.point), l);
+		#endif
 	}
 
 	// reflection
@@ -85,9 +78,9 @@ bool nearestIntersection(AccelerationStructure *sceneAS, Ray ray, RayIntersectio
 	return minIntersection;
 }
 
-glm::vec3 estimateShadowTransmittance(AccelerationStructure *sceneAS, Ray feeler, glm::vec3 &color) {
+glm::vec3 estimateShadowTransmittance(AccelerationStructure *sceneAS, Ray feeler, glm::vec3 lightColor) {
 	float transmittance = 1.0f;
-	sceneAS->estimateShadowTransmittance(feeler, color, transmittance);
+	sceneAS->estimateShadowTransmittance(feeler, lightColor, transmittance);
 
 	bool result = false;
 	for(Shape *s : sceneAS->getScene()->getPlanes()) {
@@ -96,14 +89,95 @@ glm::vec3 estimateShadowTransmittance(AccelerationStructure *sceneAS, Ray feeler
 
 		if(result) {
 			transmittance *= curr.shape->material().transparency();
-			color *= curr.shape->material().color();
+			lightColor *= curr.shape->material().color();
 		}
 	}
 
-	return color * transmittance;
+	return lightColor * transmittance;
 
+}
+
+
+bool findIntersection(AccelerationStructure *sceneAS, Ray feeler) {
+	bool result = sceneAS->findIntersection(feeler);
+
+	if(result) {
+		return result;
+	}
+
+	for(Shape *s : sceneAS->getScene()->getPlanes()) {
+		result = s->intersection(feeler, nullptr);
+
+		if(result) {
+			return result;
+		}
+	}
+
+	return false;
 }
 
 glm::vec3 computeTransmissionDir(glm::vec3 inDir, glm::vec3 normal, float beforeIOR, float afterIOR) {
 	return glm::refract(inDir, normal, beforeIOR / afterIOR);
+}
+
+glm::vec3 computeShadows(AccelerationStructure *sceneAS, Ray ray, RayIntersection intersect, 
+	glm::vec3 feelerDir, Light* light) {
+	Ray feeler = Ray(intersect.point, feelerDir);
+	bool result = false;
+
+	#ifndef SHADOW_TRANSMITTANCE
+	bool inShadow = findIntersection(sceneAS, feeler);
+	result = !inShadow;
+
+	#else
+	glm::vec3 transmittance = estimateShadowTransmittance(sceneAS, feeler, light->color());
+	result = glm::length(transmittance) > 0.01f;
+
+	#endif
+
+	if(result) {
+		Material mat = intersect.shape->material();
+		glm::vec3 reflectDir = glm::reflect(-feelerDir, intersect.normal);
+		float Lspec = powf(fmaxf(glm::dot(reflectDir, -ray.direction), 0.0f), mat.shininess());
+		float Ldiff = fmaxf(glm::dot(feelerDir, intersect.normal), 0.0f);
+
+		#ifndef SHADOW_TRANSMITTANCE
+		return (Ldiff * mat.color() * mat.diffuse() + Lspec * mat.specular()) * light->color();
+
+		#else
+		return (Ldiff * mat.color() * mat.diffuse() + Lspec * mat.specular()) * transmittance;
+
+		#endif
+	}
+
+	return glm::vec3(0.0f);
+}
+
+glm::vec3 computeSoftShadows(AccelerationStructure *sceneAS, Ray ray, RayIntersection intersect, 
+	glm::vec3 feelerDir, Light* light) {
+	glm::vec3 u, v;
+	const glm::vec3 xAxis = glm::vec3(1, 0, 0);
+	const glm::vec3 yAxis = glm::vec3(0, 1, 0);
+
+	if(equal(glm::dot(xAxis, feelerDir), 1.0f)) {
+		u = glm::cross(feelerDir, yAxis);
+	}
+	else {
+		u = glm::cross(feelerDir, xAxis);
+	}
+	v = glm::cross(feelerDir, u);
+
+	glm::vec3 localColor = glm::vec3(0.0f);
+	for(int x = 0; x < LIGHT_SAMPLE_RADIUS; x++) {
+		for(int y = 0; y < LIGHT_SAMPLE_RADIUS; y++) {
+			float xCoord = LIGHT_SOURCE_SIZE * ((y + 0.5f) * LIGHT_SAMPLE_RADIUS_F - 0.5f);
+			float yCoord = LIGHT_SOURCE_SIZE * ((x + 0.5f) * LIGHT_SAMPLE_RADIUS_F - 0.5f);
+
+			feelerDir = glm::normalize((light->position() + xCoord*u + yCoord*v) - intersect.point);
+
+			localColor += computeShadows(sceneAS, ray, intersect, feelerDir, light);
+		}
+	}
+
+	return SUM_FACTOR * localColor;
 }

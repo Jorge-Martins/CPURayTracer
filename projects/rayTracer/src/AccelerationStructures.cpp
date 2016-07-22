@@ -361,3 +361,80 @@ bool LBVH::estimateShadowTransmittance(Ray ray, glm::vec3 &color, float &transmi
 	return result;
 }
 
+bool LBVH::findIntersection(Ray ray) {
+	bool intersectionFound = false;
+
+	BVHNode *stackNodes[StackSize];
+
+	unsigned int stackIndex = 0;
+
+	stackNodes[stackIndex++] = nullptr;
+
+	BVHNode *childL, *childR, *node = &nodes[0];
+
+	intersectionFound = node->intersection(ray);
+
+	if(!intersectionFound) {
+		return false;
+	}
+
+	bool lIntersection, rIntersection, traverseL, traverseR;
+	while(node != nullptr) {
+		lIntersection = rIntersection = traverseL = traverseR = false;
+
+		childL = node->leftChild;
+		if(childL != nullptr) {
+			lIntersection = childL->intersection(ray);
+
+			if(lIntersection) {
+				// Leaf node
+				if(childL->shape != nullptr) {
+					intersectionFound = childL->shape->intersection(ray, nullptr);
+
+					if(intersectionFound) {
+						return true;
+					}
+
+				}
+				else {
+					traverseL = true;
+				}
+			}
+		}
+
+		childR = node->rightChild;
+		if(childR != nullptr) {
+			rIntersection = childR->intersection(ray);
+
+			if(rIntersection) {
+				// Leaf node
+				if(childR->shape != nullptr) {
+					intersectionFound = childR->shape->intersection(ray, nullptr);
+
+					if(intersectionFound) {
+						return true;
+					}
+
+				}
+				else {
+					traverseR = true;
+				}
+			}
+		}
+
+
+		if(!traverseL && !traverseR) {
+			node = stackNodes[--stackIndex]; // pop
+
+		}
+		else {
+			node = (traverseL) ? childL : childR;
+			if(traverseL && traverseR) {
+				stackNodes[stackIndex++] = childR; // push
+			}
+		}
+	}
+
+	return false;
+}
+
